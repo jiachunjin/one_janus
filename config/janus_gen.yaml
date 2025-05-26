@@ -1,0 +1,35 @@
+train:
+  pred_dim: 1024
+  root: "/data1/jjc/experiment" # g3/g4
+  head_resume_path: "/data1/jjc/experiment/bi_tok/0526_janus_gen_1024/diff_head-bi_tok-5k"
+  janus_resume_path: "/data1/jjc/experiment/bi_tok/0526_janus_gen_1024/janus-bi_tok-5k"
+  skipped_keys:
+  global_step: 5000
+  exp_name: &exp_name "bi_tok"
+  wandb_proj: *exp_name
+  output_dir: "0526_janus_gen_1024"
+  logging_dir: "logs"
+  mixed_precision: "bf16"
+  gradient_accumulation_steps: 1
+  report_to: "wandb"
+
+  
+  lr: 1e-4
+  num_iter: 50000
+  save_every: 5000
+
+decoder:
+  ckpt: "/data1/jjc/experiment/bi_tok/0526_janus_decoder_32/Decoder-bi_tok-2k"
+  type: "sem_woreg"
+  use_llava: false
+  feature_dim: 1024
+  feature_bottleneck: 32
+  feature_num: 576
+  dim: 1024
+  depth: 16
+  num_heads: 16
+  seq_len: 576
+  cnn_decoder_ckpt:
+
+data:
+  batch_size: 10
