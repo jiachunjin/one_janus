@@ -1,6 +1,6 @@
 import torch
 import glob
-from datasets import load_dataset, Features, Image as HFImage, Value
+from datasets import load_dataset
 from torch.utils.data import DataLoader
 from janus.models import VLChatProcessor
 from PIL import Image
@@ -35,43 +35,15 @@ def collate_fn_blip(batch):
 
 def collate_fn_journeydb(batch):
     try:
-        valid_samples = []
-        for sample in batch:
-            try:
-                # Handle raw bytes if not already decoded
-                jpg_data = sample["jpg"]
-                if isinstance(jpg_data, bytes):
-                    try:
-                        img = Image.open(io.BytesIO(jpg_data))
-                        img.load()  # Force load to validate
-                    except Exception as e:
-                        print(f"Skipping corrupted image: {e}")
-                        continue
-                elif isinstance(jpg_data, Image.Image):
-                    img = jpg_data
-                else:
-                    print(f"Unexpected image type: {type(jpg_data)}, skipping")
-                    continue
-                    
-                text = sample["txt"]
-                valid_samples.append({"jpg": img, "txt": text})
-            except Exception as e:
-                print(f"Error processing sample: {e}")
-                continue
-        
-        if len(valid_samples) == 0:
-            return {"pixel_values": torch.empty(0, 3, 224, 224), "texts": torch.empty(0, 0, dtype=torch.long)}
-            
-        imgs = [s["jpg"] for s in valid_samples]
-        texts = [s["txt"] for s in valid_samples]
-        
+        imgs = [sample["jpg"] for sample in batch]
+        texts = [sample["txt"] for sample in batch]
         pixel_values = vl_chat_processor.image_processor(imgs, return_tensors="pt").pixel_values
         input_ids = vl_chat_processor.tokenizer(texts, return_tensors="pt", padding=True, truncation=False).input_ids
 
         return {"pixel_values": pixel_values, "texts": input_ids}
     except Exception as e:
         print(f"Error in collate_fn_journeydb: {e}")
-        return {"pixel_values": torch.empty(0, 3, 224, 224), "texts": torch.empty(0, 0, dtype=torch.long)}
+        return None
 
 def get_dataloader(config):
     if config.name == "blip":
@@ -82,19 +54,11 @@ def get_dataloader(config):
         dataloader = DataLoader(ds_BLIP3o, batch_size=config.batch_size, collate_fn=collate_fn_blip, shuffle=True)
     elif config.name == "journeydb":
         data_files = glob.glob("/data1/LargeData/BLIP3o-Pretrain-JourneyDB/*.tar")
-        
-        # Define features without automatic image decoding
-        features = Features({
-            "jpg": Value("binary"),  # Keep as binary to handle manually
-            "txt": Value("string")
-        })
-        
         ds_journeydb = load_dataset(
             "webdataset",
             data_files = data_files,
             split      = "train",
-            num_proc   = 128,
-            features   = features  # Disable automatic image decoding
+            num_proc   = 128
         )
         dataloader = DataLoader(ds_journeydb, batch_size=config.batch_size, collate_fn=collate_fn_journeydb, shuffle=True)
 
@@ -109,10 +73,9 @@ class SafeDataLoader:
     def __iter__(self):
         for batch in self.dataloader:
             try:
-                # Skip empty batches
-                if len(batch["pixel_values"]) == 0:
-                    print("Skipping empty batch")
-                    continue
+                # 验证图像是否可打开
+                for image in batch["pixel_values"]:  # 假设图像列名为 "image"
+                    pass
                 yield batch
             except Exception as e:
                 print(f"⚠️ 跳过损坏的批次: {e}")

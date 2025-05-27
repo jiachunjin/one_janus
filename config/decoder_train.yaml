@@ -30,7 +30,7 @@ train:
   report_to: "wandb"
   
   lr: 1e-4
-  num_iter: 60000
+  num_iter: 80000
   save_every: 5000
 
 data:
