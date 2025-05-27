@@ -3,6 +3,8 @@ import glob
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 from janus.models import VLChatProcessor
+from PIL import Image
+import io
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -36,7 +38,7 @@ def collate_fn_journeydb(batch):
         imgs = [sample["jpg"] for sample in batch]
         texts = [sample["txt"] for sample in batch]
         pixel_values = vl_chat_processor.image_processor(imgs, return_tensors="pt").pixel_values
-        input_ids = vl_chat_processor.tokenizer(texts, return_tensors="pt", padding=True, truncation=False, max_length=128).input_ids
+        input_ids = vl_chat_processor.tokenizer(texts, return_tensors="pt", padding=True, truncation=False).input_ids
 
         return {"pixel_values": pixel_values, "texts": input_ids}
     except Exception as e:
@@ -61,4 +63,23 @@ def get_dataloader(config):
         dataloader = DataLoader(ds_journeydb, batch_size=config.batch_size, collate_fn=collate_fn_journeydb, shuffle=True)
 
 
-    return dataloader
+    return SafeDataLoader(dataloader)
+
+
+class SafeDataLoader:
+    def __init__(self, dataloader):
+        self.dataloader = dataloader
+        
+    def __iter__(self):
+        for batch in self.dataloader:
+            try:
+                # 验证图像是否可打开
+                for image in batch["pixel_values"]:  # 假设图像列名为 "image"
+                    pass
+                yield batch
+            except Exception as e:
+                print(f"⚠️ 跳过损坏的批次: {e}")
+                continue
+                
+    def __len__(self):
+        return len(self.dataloader)

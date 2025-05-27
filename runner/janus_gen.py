@@ -116,11 +116,8 @@ def main(args):
             for batch in dataloader:
                 janus.train()
                 diff_head.train()
-                try:
-                    texts = batch["texts"]
-                    pixel_values = batch["pixel_values"].to(dtype)
-                except:
-                    continue
+                texts = batch["texts"].to(accelerator.device)
+                pixel_values = batch["pixel_values"].to(accelerator.device, dtype)
                 img_features = janus.module.vision_model(pixel_values).to(dtype)
                 img_embedding = janus.module.aligner(img_features)
 

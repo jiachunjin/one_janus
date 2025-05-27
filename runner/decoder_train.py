@@ -133,7 +133,7 @@ def main(args):
                 hybrid_loss.train()
                 if config.data.name == "blip3o" or config.data.name == "journeydb":
                     try:
-                        x_0 = batch["pixel_values"].to(dtype)
+                        x_0 = batch["pixel_values"].to(accelerator.device, dtype)
                     except:
                         continue
                 else:
