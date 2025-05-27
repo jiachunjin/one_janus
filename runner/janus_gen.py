@@ -18,7 +18,6 @@ from janus.models import MultiModalityCausalLM, VLChatProcessor
 from janus.models.diff_mlp import SimpleMLPAdaLN
 from diffusers import DDPMScheduler
 from einops import rearrange
-from model.decoder import get_decoder
 
 def get_accelerator(config):
     output_dir = os.path.join(config.root, config.exp_name, config.output_dir)
@@ -55,17 +54,6 @@ def main(args):
         ckpt = torch.load(config.train.janus_resume_path, map_location="cpu")
         janus.language_model.load_state_dict(ckpt, strict=True)
 
-    decoder = get_decoder(config.decoder)
-    ckpt = torch.load(config.decoder.ckpt, map_location="cpu")
-    decoder.load_state_dict(ckpt, strict=True)
-    to_bottleneck = decoder.to_bottleneck
-    for param in to_bottleneck.parameters():
-        param.requires_grad = False
-
-    # for param in janus.parameters():
-    #     param.requires_grad = False
-    # vl_chat_processor = VLChatProcessor.from_pretrained("/data1/ckpts/deepseek-ai_/Janus-Pro-1B")
-
     global_step = config.train.global_step if config.train.global_step is not None else 0
     params_to_learn = list(p for p in janus.parameters() if p.requires_grad) + list(diff_head.parameters())
 
@@ -86,8 +74,6 @@ def main(args):
 
     janus, diff_head, dataloader, optimizer = accelerator.prepare(janus, diff_head, dataloader, optimizer)
     janus = janus.to(dtype)
-    to_bottleneck = to_bottleneck.to(accelerator.device, dtype)
-    to_bottleneck.eval()
 
     config.device_count = accelerator.num_processes
     if accelerator.is_main_process:
@@ -130,36 +116,35 @@ def main(args):
             for batch in dataloader:
                 janus.train()
                 diff_head.train()
-                text = batch["texts"]
-                pixel_values = batch["pixel_values"].to(dtype)
+                try:
+                    texts = batch["texts"]
+                    pixel_values = batch["pixel_values"].to(dtype)
+                except:
+                    continue
                 img_features = janus.module.vision_model(pixel_values).to(dtype)
-                # gt_feature = to_bottleneck(img_features)
-                img_embeddings = janus.module.aligner(img_features)
-                # img_embeddings = janus.module.low_dim_aligner(gt_feature)
-                
-                joint_embeddings = []
-                B = pixel_values.shape[0]
+                img_embedding = janus.module.aligner(img_features)
 
-                for i, input_ids in enumerate(text):
-                    input_ids = torch.cat([input_ids, torch.tensor([100003], device=accelerator.device)])
-                    text_embedding = janus.module.language_model.get_input_embeddings()(input_ids).unsqueeze(0)
-                    img_embedding = img_embeddings[i].unsqueeze(0)
-                    joint_embedding = torch.cat((text_embedding, img_embedding), dim=1)
-                    joint_embeddings.append(joint_embedding)
+                B, L = texts.shape
 
-                joint_embeddings = torch.cat(joint_embeddings, dim=0)
+                # randomly drop the text for img cfg
+                mask = torch.rand(B, 1) < 0.1
+                mask = mask.repeat(1, L)
+                texts[mask] = 100002
+                # texts[:, 0] = 100000 # recover the <｜begin▁of▁sentence｜>
+                boi_token = torch.ones((B, 1), dtype=torch.int64, device=accelerator.device) * 100003 # <｜begin▁of▁image｜>
+                input_ids = torch.cat([texts, boi_token], dim=1)
+                text_embedding = janus.module.language_model.get_input_embeddings()(input_ids)
+                joint_embedding = torch.cat((text_embedding, img_embedding), dim=1)
+                # print(text_embedding.shape, img_embedding.shape, joint_embedding.shape)
+                # exit(0)
 
                 hidden_states = janus.module.language_model(
-                    inputs_embeds=joint_embeddings,
+                    inputs_embeds=joint_embedding,
                     attention_mask=None,
                     output_hidden_states=True,
                 ).hidden_states[-1]
                 z = hidden_states[:, -576-1:-1, :]
                 gt_feature = img_features.to(dtype)
-                # gt_feature = to_bottleneck(gt_feature)
-                # print(gt_feature.shape, gt_feature.min(), gt_feature.max(), gt_feature.mean())
-                # print(z.shape, z.min(), z.max(), z.mean())
-                # exit(0)
 
                 z = rearrange(z, "B L D -> (B L) D")
                 gt_feature = rearrange(gt_feature, "B L D -> (B L) D")
