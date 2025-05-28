@@ -66,9 +66,11 @@ def collate_fn_journeydb(batch):
         texts = [s["txt"] for s in valid_samples]
         
         pixel_values = vl_chat_processor.image_processor(imgs, return_tensors="pt").pixel_values
-        input_ids = vl_chat_processor.tokenizer(texts, return_tensors="pt", padding=True, truncation=False).input_ids
+        processed_text = vl_chat_processor.tokenizer(texts, return_tensors="pt", padding=True, truncation=False)
+        input_ids = processed_text.input_ids
+        attention_mask = processed_text.attention_mask
 
-        return {"pixel_values": pixel_values, "texts": input_ids}
+        return {"pixel_values": pixel_values, "texts": input_ids, "attention_mask": attention_mask}
     except Exception as e:
         print(f"Error in collate_fn_journeydb: {e}")
         return {"pixel_values": torch.empty(0, 3, 224, 224), "texts": torch.empty(0, 0, dtype=torch.long)}

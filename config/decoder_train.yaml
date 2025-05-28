@@ -17,16 +17,16 @@ hybrid_loss:
 
 train:
   root: "/data1/jjc/experiment" # g3/g4
-  resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_decoder_1024_blip3odata/Decoder-bi_tok-30k"
-  loss_resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_decoder_1024_blip3odata/Loss-bi_tok-30k"
+  resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_decoder_1024_blip3odata/Decoder-bi_tok-45k"
+  loss_resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_decoder_1024_blip3odata/Loss-bi_tok-45k"
   skipped_keys:
-  global_step: 30000
+  global_step: 45000
   exp_name: &exp_name "bi_tok"
   wandb_proj: *exp_name
   output_dir: "0527_janus_decoder_1024_blip3odata"
   logging_dir: "logs"
   mixed_precision: "bf16"
-  gradient_accumulation_steps: 1
+  gradient_accumulation_steps: 3
   report_to: "wandb"
   
   lr: 1e-4
@@ -38,5 +38,5 @@ data:
   train_path: "/data1/LargeData/ImageNet/train" # g3/g4
   val_path: "/data1/LargeData/ImageNet/val" # g3/g4
   # img_size: 224
-  batch_size: 12
+  batch_size: 10
   num_workers: 8

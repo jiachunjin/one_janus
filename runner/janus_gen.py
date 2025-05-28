@@ -117,6 +117,7 @@ def main(args):
                 janus.train()
                 diff_head.train()
                 texts = batch["texts"].to(accelerator.device)
+                attention_mask = batch["attention_mask"].to(accelerator.device)
                 pixel_values = batch["pixel_values"].to(accelerator.device, dtype)
                 img_features = janus.module.vision_model(pixel_values).to(dtype)
                 img_embedding = janus.module.aligner(img_features)
@@ -134,10 +135,12 @@ def main(args):
                 joint_embedding = torch.cat((text_embedding, img_embedding), dim=1)
                 # print(text_embedding.shape, img_embedding.shape, joint_embedding.shape)
                 # exit(0)
+                img_mask = torch.ones((B, 1 + 576), dtype=torch.bool, device=accelerator.device)
+                attention_mask = torch.cat([attention_mask, img_mask], dim=1)
 
                 hidden_states = janus.module.language_model(
                     inputs_embeds=joint_embedding,
-                    attention_mask=None,
+                    attention_mask=attention_mask,
                     output_hidden_states=True,
                 ).hidden_states[-1]
                 z = hidden_states[:, -576-1:-1, :]
