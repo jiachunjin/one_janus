@@ -19,6 +19,7 @@ class Sem_Decoder_without_Reg(nn.Module):
             self.use_bottleneck = True
             self.feature_bottleneck = config.feature_bottleneck
             self.to_bottleneck = nn.Linear(self.feature_dim, self.feature_bottleneck)
+            self.revert_bottleneck = nn.Linear(self.feature_bottleneck, self.feature_dim)
             self.feature_proj = nn.Linear(self.feature_bottleneck, self.dim)
         else:
             self.use_bottleneck = False
@@ -51,7 +52,6 @@ class Sem_Decoder_without_Reg(nn.Module):
         B, L, D = feature.shape
         if self.use_bottleneck:
             x = self.to_bottleneck(feature)
-            # x = torch.nn.functional.silu(x)
             if not self.training:
                 print(f"after bottleneck x.shape: {x.shape}")
             x = self.feature_proj(x) + self.feature_pos_embed
@@ -72,6 +72,20 @@ class Sem_Decoder_without_Reg(nn.Module):
         else:
             x = self.cnn_decoder(x)
 
+        return x
+    
+    def pass_through_bottleneck(self, feature):
+        assert self.use_bottleneck == True
+        # print('feature', feature.dtype, self.to_bottleneck.d)
+        x = self.to_bottleneck(feature)
+        return x
+    
+    def revert_from_bottleneck(self, feature):
+        """
+        feature: (B, L, D') where D' is the bottleneck dimension
+        """
+        assert self.use_bottleneck == True
+        x = self.revert_bottleneck(feature)
         return x
     
     def forward_with_compressed_feature(self, x):

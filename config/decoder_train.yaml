@@ -4,6 +4,7 @@ decoder:
   type: "sem_woreg"
   use_llava: false
   feature_dim: 1024
+  feature_bottleneck: 16
   feature_num: 576
   dim: 1024
   depth: 16
@@ -12,25 +13,26 @@ decoder:
   cnn_decoder_ckpt:
 
 hybrid_loss:
-  disc_start: 2000
+  disc_start: 0
   disc_weight: 0.1
 
 train:
+  bottleneck_loss_weight: 1
   root: "/data1/jjc/experiment" # g3/g4
-  resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_decoder_1024_blip3odata/Decoder-bi_tok-45k"
-  loss_resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_decoder_1024_blip3odata/Loss-bi_tok-45k"
+  resume_path: "/data1/jjc/experiment/bi_tok/0529_decoder_16_jdb/Decoder-bi_tok-10k"
+  loss_resume_path: "/data1/jjc/experiment/bi_tok/0529_decoder_16_jdb/Loss-bi_tok-10k"
   skipped_keys:
-  global_step: 45000
+  global_step: 0
   exp_name: &exp_name "bi_tok"
   wandb_proj: *exp_name
-  output_dir: "0527_janus_decoder_1024_blip3odata"
+  output_dir: "0529_decoder_16_jdb"
   logging_dir: "logs"
   mixed_precision: "bf16"
-  gradient_accumulation_steps: 3
+  gradient_accumulation_steps: 1
   report_to: "wandb"
   
   lr: 1e-4
-  num_iter: 80000
+  num_iter: 50000
   save_every: 5000
 
 data:
@@ -38,5 +40,5 @@ data:
   train_path: "/data1/LargeData/ImageNet/train" # g3/g4
   val_path: "/data1/LargeData/ImageNet/val" # g3/g4
   # img_size: 224
-  batch_size: 10
+  batch_size: 12
   num_workers: 8

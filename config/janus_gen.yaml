@@ -1,10 +1,10 @@
 train:
   pred_dim: 1024
   root: "/data1/jjc/experiment" # g3/g4
-  head_resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_gen_1024_journeydb/diff_head-bi_tok-105k"
-  janus_resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_gen_1024_journeydb/janus-bi_tok-105k"
+  head_resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_gen_1024_journeydb/diff_head-bi_tok-135k"
+  janus_resume_path: "/data1/jjc/experiment/bi_tok/0527_janus_gen_1024_journeydb/janus-bi_tok-135k"
   skipped_keys:
-  global_step: 105000
+  global_step: 135000
   exp_name: &exp_name "bi_tok"
   wandb_proj: *exp_name
   output_dir: "0527_janus_gen_1024_journeydb"

@@ -252,7 +252,10 @@ class MultiModalityCausalLM(MultiModalityPreTrainedModel):
         bs, n = pixel_values.shape[0:2]
         images = rearrange(pixel_values, "b n c h w -> (b n) c h w")
         # [b x n, T2, D]
-        images_embeds = self.aligner(self.vision_model(images))
+        if "bottlenecked_feature" in kwargs:
+            images_embeds = self.aligner(kwargs["bottlenecked_feature"])
+        else: 
+            images_embeds = self.aligner(self.vision_model(images))
 
         # [b x n, T2, D] -> [b, n x T2, D]
         images_embeds = rearrange(images_embeds, "(b n) t d -> b (n t) d", b=bs, n=n)

@@ -99,6 +99,7 @@ def main(args):
         dtype = torch.float32
     
     decoder, hybrid_loss, dataloader, optimizer = accelerator.prepare(decoder, hybrid_loss, dataloader, optimizer)
+    decoder = decoder.to(dtype)
     hybrid_loss = hybrid_loss.to(dtype)
     extractor = extractor.to(accelerator.device, dtype).eval()    
 
@@ -153,7 +154,7 @@ def main(args):
                         image_outputs = extractor(x_0, output_hidden_states=True)
                         feature = image_outputs.hidden_states[-2][:, 1:]
                     elif config.extractor == "janus":
-                        feature = extractor(x_0) # (B, 576, 1024)
+                        feature = extractor(x_0).to(dtype) # (B, 576, 1024)
 
                 rec = decoder(feature).to(dtype)
 
@@ -164,10 +165,21 @@ def main(args):
                     global_step     = global_step+1,
                     last_layer      = decoder.module.cnn_decoder.last_layer
                 )
-                # loss = F.mse_loss(rec, x_0, reduction="mean") + 1.1 * p_loss(rec, x_0).mean()
+                if decoder.module.use_bottleneck:
+                    bottlenecked = decoder.module.pass_through_bottleneck(feature)
+                    reverted_feature = decoder.module.revert_from_bottleneck(bottlenecked)
+                    # compute the cosine similarity between reverted_feature and feature
+                    cosine_sim = F.cosine_similarity(reverted_feature.view(reverted_feature.size(0), -1), feature.view(feature.size(0), -1), dim=1)
+                    loss_bottleneck = 1 - cosine_sim.mean()
+
+
+                    # loss_bottleneck = F.mse_loss(reverted_feature, feature, reduction="mean")
 
                 optimizer.zero_grad()
-                accelerator.backward(loss)
+                if decoder.module.use_bottleneck:
+                    accelerator.backward(loss + loss_bottleneck * config.train.bottleneck_loss_weight)
+                else:
+                    accelerator.backward(loss)
                 if accelerator.sync_gradients:
                     accelerator.clip_grad_norm_(params_to_learn, 1.0)
                 optimizer.step()
@@ -194,6 +206,8 @@ def main(args):
                         siglip_decoder = accelerator.gather(loss.detach()).mean().item(),
                         loss_disc      = accelerator.gather(loss_disc.detach()).mean().item()
                     )
+                    if decoder.module.use_bottleneck:
+                        logs["loss_bottleneck"] = accelerator.gather(loss_bottleneck.detach()).mean().item()
                     accelerator.log(logs, step=global_step)
                     progress_bar.set_postfix(**logs)
 
