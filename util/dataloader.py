@@ -100,13 +100,14 @@ def get_dataloader(config):
         )
         dataloader = DataLoader(ds_journeydb, batch_size=config.batch_size, collate_fn=collate_fn_journeydb, shuffle=True)
 
-
-    return SafeDataLoader(dataloader)
+    # return SafeDataLoader(dataloader)
+    return dataloader
 
 
 class SafeDataLoader:
     def __init__(self, dataloader):
         self.dataloader = dataloader
+        self.batch_size = dataloader.batch_size
         
     def __iter__(self):
         for batch in self.dataloader:

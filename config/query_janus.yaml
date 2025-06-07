@@ -1,0 +1,32 @@
+dit:
+  hidden_size: 1024
+  num_heads: 16
+  depth: 16
+  x_dim: 1024
+  z_dim: 2048
+
+query:
+  num_queries: 576
+  query_dim: 2048
+
+train:
+  root: "/data1/jjc/experiment" # g3/g4
+  resume_path:
+  skipped_keys:
+  global_step: 0
+  exp_name: &exp_name "bi_tok"
+  wandb_proj: *exp_name
+  output_dir: "0607_query_janus"
+  logging_dir: "logs"
+  mixed_precision: "bf16"
+  gradient_accumulation_steps: 1
+  report_to: "wandb"
+  
+  lr: 1e-4
+  num_iter: 50000
+  save_every: 5000
+  cfg_drop_rate: 0.1
+
+data:
+  name: "journeydb" # ["blip", "journeydb"]
+  batch_size: 16
