@@ -11,9 +11,10 @@ query:
 
 train:
   root: "/data1/jjc/experiment" # g3/g4
-  resume_path:
+  dit_resume_path: "/data1/jjc/experiment/bi_tok/0607_query_janus/dit-bi_tok-70000"
+  query_resume_path: "/data1/jjc/experiment/bi_tok/0607_query_janus/query-bi_tok-70000"
   skipped_keys:
-  global_step: 0
+  global_step: 70000
   exp_name: &exp_name "bi_tok"
   wandb_proj: *exp_name
   output_dir: "0607_query_janus"
@@ -23,7 +24,7 @@ train:
   report_to: "wandb"
   
   lr: 1e-4
-  num_iter: 50000
+  num_iter: 150000
   save_every: 5000
   cfg_drop_rate: 0.1
 

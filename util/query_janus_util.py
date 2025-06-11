@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from model.dit import DiT
+from model.dit.connector import Connector
 from diffusers import DDPMScheduler
 
 
@@ -9,6 +10,7 @@ def equip_janus(janus, config):
     把learnable queries和DiT装到pretrained janus上
     """
     dit = DiT(config.dit)
+    # connector = Connector(config.connector)
     query = nn.Parameter(torch.randn(config.query.num_queries, config.query.query_dim))
     janus.requires_grad_(False)
     janus.eval()
@@ -16,6 +18,8 @@ def equip_janus(janus, config):
     janus.query.requires_grad_(True)
     janus.dit = dit
     janus.dit.requires_grad_(True)
+    # janus.connector = connector
+    # janus.connector.requires_grad_(True)
 
     train_scheduler = DDPMScheduler(
         beta_schedule          = "scaled_linear",
