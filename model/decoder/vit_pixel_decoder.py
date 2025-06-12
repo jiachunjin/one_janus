@@ -52,10 +52,21 @@ class VitPixelDecoder(nn.Module):
 
 if __name__ == "__main__":
     from omegaconf import OmegaConf
-    config = OmegaConf.load("/home/jjc/codebase/one_janus/config/vit_pixel_decoder.yaml")
+    from model.loss.rec_loss import RecLoss
+
+    config = OmegaConf.load("/data1/jjc/codebase/one_janus/config/vit_pixel_decoder.yaml")
     decoder = VitPixelDecoder(config.decoder)
     num_parameters = sum(p.numel() for p in decoder.parameters())
     print(f"Number of parameters: {num_parameters}")
     x = torch.randn(1, 576, 1024)
-    out = decoder(x)
-    print(out.shape)
+    ori = torch.randn(1, 3, 384, 384)
+    rec = decoder(x)
+    
+    print(x.shape, rec.shape)
+
+    rec_loss = RecLoss(config.rec_loss)
+    loss, loss_dict = rec_loss(ori, rec, 5000, "generator")
+    print("generator loss", loss, loss_dict)
+
+    loss, loss_dict = rec_loss(ori, rec, 5000, "discriminator")
+    print("discriminator loss", loss, loss_dict)

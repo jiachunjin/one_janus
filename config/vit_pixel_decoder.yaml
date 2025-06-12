@@ -1,7 +1,42 @@
+janus_path: "/data1/ckpts/deepseek-ai_/Janus-Pro-1B"
 decoder:
+  type: "vit_pixel_decoder"
   hidden_size: 1024
   depth: 16
   num_heads: 16
   patch_size: 16
   grid_size: 24
   input_dim: 1024
+
+rec_loss:
+  perceptual_loss_name: "lpips-convnext_s-1.0-0.1"
+  rec_weight: 1.0
+  perceptual_weight: 1.1
+  discriminator_weight: 0.1
+  lecam_regularization_weight: 0.001
+
+  discriminator_factor: 1.0
+  discriminator_start_iter: 6000
+
+train:
+  root: "/data1/jjc/experiment"
+  resume_path_decoder:
+  resume_path_recloss:
+  global_step: 
+  exp_name: &exp_name "decoder"
+  wandb_proj: *exp_name
+  output_dir: "0612_decoder"
+  logging_dir: "logs"
+  mixed_precision: "bf16"
+  gradient_accumulation_steps: 1
+  report_to: "wandb"
+  
+  lr: 1e-4
+  num_iter: 100000
+  save_every: 5000
+
+data:
+  name: "imagenet"
+  train_path: "/data1/LargeData/ImageNet/train"
+  batch_size: 16
+  num_workers: 8

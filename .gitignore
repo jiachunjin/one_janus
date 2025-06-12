@@ -3,5 +3,4 @@ wandb/
 assets/
 g4_ckpt/
 generated_samples/
-*.pth
 *.ckpt

@@ -3,6 +3,7 @@ from .decoder_ff import Decoder_ff
 from .decoder_2d import Decoder_2D, Decoder_1D
 from .sem_decoder_reg import Sem_Decoder_Reg
 from .sem_decoder_woreg import Sem_Decoder_without_Reg
+from .vit_pixel_decoder import VitPixelDecoder
 
 def get_decoder(config):
     if config.type == "diffusion":
@@ -13,6 +14,8 @@ def get_decoder(config):
         decoder = Sem_Decoder_Reg(config)
     elif config.type == "sem_woreg":
         decoder = Sem_Decoder_without_Reg(config)
+    elif config.type == "vit_pixel_decoder":
+        decoder = VitPixelDecoder(config)
     elif config.type is None:
         decoder = None
     

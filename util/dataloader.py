@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from janus.models import VLChatProcessor
 from PIL import Image
 import io
-
+import torchvision
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -99,6 +99,18 @@ def get_dataloader(config):
             features   = features  # Disable automatic image decoding
         )
         dataloader = DataLoader(ds_journeydb, batch_size=config.batch_size, collate_fn=collate_fn_journeydb, shuffle=True)
+    elif config.name == "imagenet":
+        processor = VLChatProcessor.from_pretrained("/data1/ckpts/deepseek-ai_/Janus-Pro-1B").image_processor
+        imagenet_transform_train = lambda x: processor(images=[x], return_tensors="pt").pixel_values[0]
+        imagenet_data_train = torchvision.datasets.ImageFolder(config.train_path, transform=imagenet_transform_train)
+
+        dataloader = torch.utils.data.DataLoader(
+            imagenet_data_train,
+            batch_size  = config.batch_size,
+            shuffle     = True,
+            num_workers = config.num_workers,
+            drop_last   = True,
+        )
 
     # return SafeDataLoader(dataloader)
     return dataloader

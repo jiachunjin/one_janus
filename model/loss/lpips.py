@@ -84,7 +84,7 @@ class LPIPS(nn.Module):
 
     def load_pretrained(self):
         workspace = os.environ.get('WORKSPACE', '')
-        VGG_PATH = get_ckpt_path("vgg_lpips", os.path.join(workspace, "models/vgg_lpips.pth"), check=True)
+        VGG_PATH = get_ckpt_path("vgg_lpips", os.path.join(workspace, "model/loss/vgg_lpips.pth"), check=True)
         self.load_state_dict(torch.load(VGG_PATH, map_location=torch.device("cpu")), strict=False)
 
     def forward(self, input, target):
