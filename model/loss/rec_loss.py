@@ -104,10 +104,10 @@ class RecLoss(nn.Module):
         )
 
         loss_dict = dict(
-            total_loss           = total_loss.clone().detach(),
-            reconstruction_loss  = reconstruction_loss.detach(),
-            perceptual_loss      = perceptual_loss.detach(),
-            gan_loss             = generator_loss.detach(),
+            total_loss           = total_loss.clone().detach().item(),
+            reconstruction_loss  = reconstruction_loss.detach().item(),
+            perceptual_loss      = perceptual_loss.detach().item(),
+            gan_loss             = generator_loss.detach().item(),
         )
 
         return total_loss, loss_dict
@@ -140,10 +140,10 @@ class RecLoss(nn.Module):
         discriminator_loss += lecam_loss
 
         loss_dict = dict(
-            discriminator_loss = discriminator_loss.detach(),
-            logits_real        = logits_real.detach().mean(),
-            logits_fake        = logits_fake.detach().mean(),
-            lecam_loss         = lecam_loss.detach(),
+            discriminator_loss = discriminator_loss.detach().item(),
+            logits_real        = logits_real.detach().mean().item(),
+            logits_fake        = logits_fake.detach().mean().item(),
+            lecam_loss         = lecam_loss.detach().item(),
         )
         return discriminator_loss, loss_dict
 

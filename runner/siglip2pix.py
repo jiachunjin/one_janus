@@ -40,9 +40,11 @@ def main(args):
     dataloader = get_dataloader(config.data)
 
     if config.train.resume_path_decoder is not None:
-        raise NotImplementedError("resume is not implemented")
+        ckpt = torch.load(config.train.resume_path_decoder, map_location="cpu")
+        decoder.load_state_dict(ckpt, strict=True)
     if config.train.resume_path_recloss is not None:
-        raise NotImplementedError("resume is not implemented")
+        ckpt = torch.load(config.train.resume_path_recloss, map_location="cpu")
+        rec_loss.load_state_dict(ckpt, strict=True)
     
     global_step = config.train.global_step if config.train.global_step is not None else 0
     params_to_learn = list(decoder.parameters())
@@ -58,7 +60,7 @@ def main(args):
 
     optimizer_disc = torch.optim.AdamW(
         disc_params,
-        lr           = config.train.lr,
+        lr           = config.train.lr_disc,
         betas        = (0.9, 0.95),
         weight_decay = 5e-2,
         eps          = 1e-8,
@@ -115,7 +117,7 @@ def main(args):
                 rec = decoder(feature)
 
                 # ---------- train autoencoder ----------
-                loss_rec, loss_dict = rec_loss(x, rec, global_step, "generator")
+                loss_rec, loss_rec_dict = rec_loss(x, rec, global_step, "generator")
 
                 optimizer.zero_grad()
                 accelerator.backward(loss_rec)
@@ -124,7 +126,7 @@ def main(args):
                 optimizer.step()
 
                 # ---------- train discriminator ----------
-                loss_disc, loss_dict = rec_loss(x, rec, global_step, "discriminator")
+                loss_disc, loss_disc_dict = rec_loss(x, rec, global_step, "discriminator")
 
                 optimizer_disc.zero_grad()
                 accelerator.backward(loss_disc)
@@ -138,7 +140,9 @@ def main(args):
 
                     logs = dict(
                         loss_rec  = accelerator.gather(loss_rec.detach()).mean().item(),
-                        loss_disc = accelerator.gather(loss_disc.detach()).mean().item()
+                        loss_disc = accelerator.gather(loss_disc.detach()).mean().item(),
+                        **loss_rec_dict,
+                        **loss_disc_dict,
                     )
                     accelerator.log(logs, step=global_step)
                     progress_bar.set_postfix(**logs)
