@@ -1,0 +1,7 @@
+decoder:
+  hidden_size: 1024
+  depth: 16
+  num_heads: 16
+  patch_size: 16
+  grid_size: 24
+  input_dim: 1024
