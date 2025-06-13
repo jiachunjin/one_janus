@@ -20,9 +20,9 @@ rec_loss:
 
 train:
   root: "/data1/jjc/experiment"
-  resume_path_decoder: "/data1/jjc/experiment/decoder/0612_decoder/Decoder-decoder-80k"
-  resume_path_recloss: "/data1/jjc/experiment/decoder/0612_decoder/Loss-decoder-80k"
-  global_step: 80000
+  resume_path_decoder: "/data1/jjc/experiment/decoder/0612_decoder/Decoder-decoder-100k"
+  resume_path_recloss: "/data1/jjc/experiment/decoder/0612_decoder/Loss-decoder-100k"
+  global_step: 100000
   exp_name: &exp_name "decoder"
   wandb_proj: *exp_name
   output_dir: "0612_decoder"
@@ -32,7 +32,7 @@ train:
   report_to: "wandb"
   
   lr: 1e-4
-  lr_disc: 5e-6
+  lr_disc: 5e-5
   num_iter: 200000
   save_every: 10000
 
