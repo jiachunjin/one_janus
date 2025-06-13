@@ -3,6 +3,7 @@ import glob
 from datasets import load_dataset, Features, Image as HFImage, Value
 from torch.utils.data import DataLoader
 from janus.models import VLChatProcessor
+import torchvision.transforms as pth_transforms
 from PIL import Image
 import io
 import torchvision
@@ -100,8 +101,17 @@ def get_dataloader(config):
         )
         dataloader = DataLoader(ds_journeydb, batch_size=config.batch_size, collate_fn=collate_fn_journeydb, shuffle=True)
     elif config.name == "imagenet":
-        processor = VLChatProcessor.from_pretrained("/data1/ckpts/deepseek-ai_/Janus-Pro-1B").image_processor
-        imagenet_transform_train = lambda x: processor(images=[x], return_tensors="pt").pixel_values[0]
+        if config.siglip_preprocess:
+            processor = VLChatProcessor.from_pretrained("/data1/ckpts/deepseek-ai_/Janus-Pro-1B").image_processor
+            imagenet_transform_train = lambda x: processor(images=[x], return_tensors="pt").pixel_values[0]
+        else:
+            imagenet_transform_train = pth_transforms.Compose([
+                pth_transforms.Resize(config.img_size, max_size=None),
+                pth_transforms.RandomHorizontalFlip(p=0.5),
+                pth_transforms.CenterCrop(config.img_size),
+                pth_transforms.ToTensor(),
+            ])
+
         imagenet_data_train = torchvision.datasets.ImageFolder(config.train_path, transform=imagenet_transform_train)
 
         dataloader = torch.utils.data.DataLoader(

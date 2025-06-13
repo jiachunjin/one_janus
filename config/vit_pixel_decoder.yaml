@@ -16,13 +16,13 @@ rec_loss:
   lecam_regularization_weight: 0.001
 
   discriminator_factor: 1.0
-  discriminator_start_iter: 6000
+  discriminator_start_iter: 0
 
 train:
   root: "/data1/jjc/experiment"
-  resume_path_decoder: "/data1/jjc/experiment/decoder/0612_decoder/Decoder-decoder-100k"
-  resume_path_recloss: "/data1/jjc/experiment/decoder/0612_decoder/Loss-decoder-100k"
-  global_step: 100000
+  resume_path_decoder: "/data1/jjc/experiment/decoder/0612_decoder/Decoder-decoder-120k"
+  resume_path_recloss: "/data1/jjc/experiment/decoder/0612_decoder/Loss-decoder-120k"
+  global_step: 120000
   exp_name: &exp_name "decoder"
   wandb_proj: *exp_name
   output_dir: "0612_decoder"
@@ -32,12 +32,14 @@ train:
   report_to: "wandb"
   
   lr: 1e-4
-  lr_disc: 5e-5
-  num_iter: 200000
+  lr_disc: 1e-4
+  num_iter: 400000
   save_every: 10000
 
 data:
   name: "imagenet"
   train_path: "/data1/LargeData/ImageNet/train"
+  siglip_preprocess: false
   batch_size: 16
-  num_workers: 8
+  num_workers: 4
+  img_size: 384

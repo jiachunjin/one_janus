@@ -110,6 +110,8 @@ def main(args):
                 rec_loss.train()
                 x, y = batch
                 x = x.to(dtype)
+                if not config.data.siglip_preprocess:
+                    x = x * 2 - 1
 
                 with torch.no_grad():
                     feature = extractor(x).to(dtype)
