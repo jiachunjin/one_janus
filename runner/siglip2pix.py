@@ -111,7 +111,11 @@ def main(args):
             with accelerator.accumulate([decoder, rec_loss]):
                 decoder.train()
                 rec_loss.train()
-                x, y = batch
+                if config.data.name == "imagenet_wds":
+                    x = batch["pixel_values"]
+                    y = batch["labels"]
+                else:
+                    x, y = batch
                 x = x.to(dtype)
                 if not config.data.siglip_preprocess:
                     x = x * 2 - 1

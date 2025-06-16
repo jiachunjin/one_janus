@@ -20,26 +20,28 @@ rec_loss:
 
 train:
   root: "/data1/jjc/experiment"
-  resume_path_decoder: "/data1/jjc/experiment/decoder/0612_decoder/Decoder-decoder-400k"
-  resume_path_recloss: "/data1/jjc/experiment/decoder/0612_decoder/Loss-decoder-400k"
-  skipped_keys: ["conv_out.2.weight", "conv_out.2.bias"]
-  global_step: 400000
+  resume_path_decoder: "/data1/jjc/experiment/decoder/0612_decoder/Decoder-decoder-410k"
+  resume_path_recloss: "/data1/jjc/experiment/decoder/0612_decoder/Loss-decoder-410k"
+  skipped_keys:
+  global_step: 410000
   exp_name: &exp_name "decoder"
   wandb_proj: *exp_name
   output_dir: "0612_decoder"
   logging_dir: "logs"
   mixed_precision: "bf16"
   gradient_accumulation_steps: 1
-  report_to: "wandb"
+  report_to: "no"
   
   lr: 1e-4
   lr_disc: 1e-5
-  num_iter: 600000
+  num_iter: 500000
   save_every: 10000
 
 data:
   name: "imagenet"
   train_path: "/data1/LargeData/ImageNet/train"
+  # name: "imagenet_wds"
+  # train_path: "/data1/LargeData/timm/imagenet-1k-wds"
   siglip_preprocess: false
   batch_size: 16
   num_workers: 4

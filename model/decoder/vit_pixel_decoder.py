@@ -28,8 +28,10 @@ class VitPixelDecoder(nn.Module):
         self.conv_out = nn.Sequential(
             nn.Conv2d(3, 64, 3, padding=1),
             nn.ReLU(inplace=True),
-            # nn.Conv2d(64, 64, 3, padding=1),
-            # nn.ReLU(inplace=True),
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 64, 3, padding=1),
+            nn.ReLU(inplace=True),
             nn.Conv2d(64, 3, 3, padding=1)
         )
         self.precompute_pos = dict()
