@@ -24,7 +24,12 @@ class VitPixelDecoder(nn.Module):
             nn.Conv2d(self.hidden_size, self.patch_size * self.patch_size * 3, 1, padding=0, bias=True),
             Rearrange("b (p1 p2 c) h w -> b c (h p1) (w p2)", p1=self.patch_size, p2=self.patch_size)
         )
-        self.conv_out = nn.Conv2d(3, 3, 3, padding=1, bias=True)
+        # self.conv_out = nn.Conv2d(3, 3, 3, padding=1, bias=True)
+        self.conv_out = nn.Sequential(
+            nn.Conv2d(3, 64, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 3, 3, padding=1)
+        )
         self.precompute_pos = dict()
 
     def fetch_pos(self, height, width, device):
