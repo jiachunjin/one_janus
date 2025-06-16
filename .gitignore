@@ -4,3 +4,4 @@ assets/
 g4_ckpt/
 generated_samples/
 *.ckpt
+*.png

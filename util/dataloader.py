@@ -104,10 +104,17 @@ def get_dataloader(config):
         if config.siglip_preprocess:
             processor = VLChatProcessor.from_pretrained("/data1/ckpts/deepseek-ai_/Janus-Pro-1B").image_processor
             imagenet_transform_train = lambda x: processor(images=[x], return_tensors="pt").pixel_values[0]
+            imagenet_transform_val = imagenet_transform_train
         else:
             imagenet_transform_train = pth_transforms.Compose([
                 pth_transforms.Resize(config.img_size, max_size=None),
                 pth_transforms.RandomHorizontalFlip(p=0.5),
+                pth_transforms.CenterCrop(config.img_size),
+                pth_transforms.ToTensor(),
+            ])
+
+            imagenet_transform_val = pth_transforms.Compose([
+                pth_transforms.Resize(config.img_size, max_size=None),
                 pth_transforms.CenterCrop(config.img_size),
                 pth_transforms.ToTensor(),
             ])
@@ -121,9 +128,17 @@ def get_dataloader(config):
             num_workers = config.num_workers,
             drop_last   = True,
         )
-
-    # return SafeDataLoader(dataloader)
-    return dataloader
+        if config.val_path is None:
+            return dataloader
+        else:
+            imagenet_data_val = torchvision.datasets.ImageFolder(config.val_path, transform=imagenet_transform_val)
+            dataloader_val = torch.utils.data.DataLoader(
+                imagenet_data_val,
+                batch_size  = config.batch_size,
+                shuffle     = False,
+                num_workers = config.num_workers,
+            )
+            return dataloader, dataloader_val
 
 
 class SafeDataLoader:

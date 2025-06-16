@@ -41,6 +41,8 @@ def main(args):
 
     if config.train.resume_path_decoder is not None:
         ckpt = torch.load(config.train.resume_path_decoder, map_location="cpu")
+        if config.train.skipped_keys:
+            ckpt = {k: v for k, v in ckpt.items() if k not in config.train.skipped_keys}
         m, u = decoder.load_state_dict(ckpt, strict=False)
         print(f"Loaded {m} modules and {u} unmatch modules")
     if config.train.resume_path_recloss is not None:
