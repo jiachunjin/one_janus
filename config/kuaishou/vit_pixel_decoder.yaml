@@ -1,4 +1,4 @@
-janus_path: "/data1/ckpts/deepseek-ai_/Janus-Pro-1B"
+janus_path: "/phd/jinjiachun/ckpt/deepseek-ai/Janus-Pro-1B"
 decoder:
   type: "vit_pixel_decoder"
   hidden_size: 1024
@@ -19,14 +19,14 @@ rec_loss:
   discriminator_start_iter: 0
 
 train:
-  root: "/data1/jjc/experiment"
-  resume_path_decoder: "/data1/jjc/experiment/decoder/0612_decoder/Decoder-decoder-450k"
-  resume_path_recloss: "/data1/jjc/experiment/decoder/0612_decoder/Loss-decoder-450k"
+  root: "/phd/jinjiachun/experiment"
+  resume_path_decoder:
+  resume_path_recloss:
   skipped_keys:
-  global_step: 450000
+  global_step:
   exp_name: &exp_name "decoder"
   wandb_proj: *exp_name
-  output_dir: "0612_decoder"
+  output_dir: "0618_vitdecoder"
   logging_dir: "logs"
   mixed_precision: "bf16"
   gradient_accumulation_steps: 1
@@ -38,10 +38,8 @@ train:
   save_every: 10000
 
 data:
-  name: "imagenet"
-  train_path: "/data1/LargeData/ImageNet/train"
-  # name: "imagenet_wds"
-  # train_path: "/data1/LargeData/timm/imagenet-1k-wds"
+  name: "imagenet_wds"
+  train_path: "/phd/jinjiachun/dataset/timm/imagenet-1k-wds"
   siglip_preprocess: false
   batch_size: 16
   num_workers: 4

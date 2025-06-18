@@ -23,7 +23,7 @@ config.data.val_path = "/data1/LargeData/ImageNet/val"
 config.data.batch_size = 1
 _, dataloader_val = get_dataloader(config.data)
 autoencoder = AutoEncoder(config)
-autoencoder.decoder.load_state_dict(torch.load(os.path.join(exp_dir, "Decoder-decoder-400k"), map_location="cpu", weights_only=True), strict=True)
+autoencoder.decoder.load_state_dict(torch.load(os.path.join(exp_dir, "Decoder-decoder-500k"), map_location="cpu", weights_only=True), strict=True)
 autoencoder.eval()
 
 accelerator = Accelerator()
@@ -45,18 +45,18 @@ with torch.no_grad():
         ori = inversed_transform(x_0.cpu().squeeze(0))
 
         rec.save(f"evaluation/rec_img/{rank}_{i}.png")
-        ori.save(f"evaluation/ori_img/{rank}_{i}.png")
+        # ori.save(f"evaluation/ori_img/{rank}_{i}.png")
 
 accelerator.wait_for_everyone()
-
-metrics_dict = torch_fidelity.calculate_metrics(
-    input1  = "evaluation/ori_img",
-    input2  = "evaluation/rec_img",
-    cuda    = True,
-    isc     = True,
-    fid     = True,
-    kid     = True,
-    prc     = True,
-    verbose = True,
-)
-print(metrics_dict)
+if accelerator.is_main_process:
+    metrics_dict = torch_fidelity.calculate_metrics(
+        input1  = "evaluation/ori_img",
+        input2  = "evaluation/rec_img",
+        cuda    = True,
+        isc     = True,
+        fid     = True,
+        kid     = True,
+        prc     = True,
+        verbose = True,
+    )
+    print(metrics_dict)
